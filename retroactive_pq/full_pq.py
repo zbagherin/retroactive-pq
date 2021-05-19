@@ -130,7 +130,7 @@ class PriorityQueue:
             else:
                 joined = sorted(q1_now + q2_deleted)
                 split_idx = len(q1_now) - len(q2_deleted)
-                q3_now = q2_now + joined[-split_idx:]
+                q3_now = q2_now + joined[-split_idx + 1:]
                 q3_deleted = q1_deleted + joined[:len(q2_deleted)]
             q1_now = q3_now
             q1_deleted = q3_deleted
