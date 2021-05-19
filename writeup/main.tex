@@ -1,0 +1,121 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Retroactive Priority Queues in Python}
+\author{Parker Rule}
+\date{May 18, 2021}
+\usepackage{newpxtext,newpxmath}
+\usepackage{minted}
+%\usepackage{biblatex}
+
+\usepackage[
+backend=biber,
+style=alphabetic,
+citestyle=alphabetic,
+]{biblatex}
+\addbibresource{bib.bib}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=blue,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+
+\urlstyle{same}
+
+\newcommand{\insertop}{\textbf{insert}}
+\newcommand{\delinsert}{\textbf{delete}(insert)}
+\newcommand{\deletemin}{\textbf{delete-min}}
+\newcommand{\deldelmin}{\textbf{delete}(delete-min)}
+\newcommand{\Qnow}{Q_{\text{now}}}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction and literature review}
+This project is a Python implementation of retroactive priority queues with an emphasis on readability and data structure reuse. Demaine et al. \cite{demaine2007retroactive}  describe retroactive data structures as a ``a new data structuring paradigm in which operations can be performed on a
+data structure not only in the present, but also in the past.'' Any data structure can be made retroactive by keeping an event log and replaying events after a change in history; a typical goal in the design of retroactive data structures is to improve over the performance of this naive general transformation. A \emph{partially retroactive} data structure supports updates and queries to the current state ($t = \infty$) and updates to the past; a \emph{fully retroactive} data structure also allows queries in the past. We fully implement a partially retroactive priority queue and partially implement a fully retroactive priority queue.
+
+Demaine et al. \cite{demaine2007retroactive} give a partially retroactive priority queue that supports \insertop\ and \deletemin\ operations in $O(\log m)$ time, where $m$ is the number of total operations, a significant improvement over the naive $O(m)$ solution. Operations can be deleted, so there are four possible events: \insertop, \delinsert, \deletemin, and \deldelmin. Priority queues are interesting because they are highly nonlocal---one operation can cause cascading effects on the lifetimes of other elements in the priority queue. However, each operation only results in small changes to the current state $\Qnow$ (at most one element element in and one element out per operation). Demaine et al. make use of \emph{bridges} to give simple update rules for each of the four possible events. (A bridge is a time $t$ in the past where $Q_t \subseteq \Qnow$---that is, the elements in the queue at time $t$ are a subset of the current elements.) These updates can be performed in $O(\log m)$ by storing $\Qnow$, an event tree (a linked list in the original paper), an updates tree, and a tree of insertion operations in augmented balanced binary search trees. (Each of these trees has size $O(m)$, so the overall data structure has size $O(m)$.) Specifically, we perform queries on the updates tree of the form ``what is the last time before $t$ (or first time after $t$) when the events had the prefix sum $x$?'' These queries are used to find bridges, which correspond to a prefix sum of 0; they can be answered efficiently by augmenting internal nodes with the subtree sum and the minimum and maximum subtree prefix sums. Similarly, the tree of insertion operations is augmented to keep track of the minimum element in $\Qnow$ and the maximum element not in $\Qnow$ at each internal node.
+
+Later work by Demaine et al. \cite{demaine2015polylogarithmic} describes a fully retroactive priority queue that supports $O(\text{polylog } m)$ time and $O(m \log m)$ space using \emph{hierarchical checkpointing}. The basic idea is to insert each operation in separate partially retroactive priority queues at the $O(\log m)$ levels of a main tree. (This is somewhat analogous to a segment tree.) We then can construct a view of the priority queue at time $t$ by merging an $O(\log m)$-size set of queues that covers the internal $[0, t]$ (or, more generally, $[t_\text{start}, t_\text{end}]$). Augmenting each internal node with a partially retroactive priority queue---itself a complicated data structure that contains multiple augmented trees---means that rebalancing the main tree is challenging. However, the tree can easily be rebuilt from the bottom up in $O(m \log m)$ time, so we can use a \emph{scapegoat tree}---a balanced binary search tree that rebuilds unbalanced subtrees all at once, rather than performing local rotations---to achieve updates in $O(\log^2 m)$ amortized time. When rebuilding a tree of size $m$ only takes $O(m)$ time, the scapegoat tree has the same amortized performance guarantees as more familiar balanced binary search trees \cite{galperin1993scapegoat}. My implementation uses the scapegoat tree to implement all augmented binary search trees.
+
+Fusing $O(\log m)$ partially retroactive priority queues---or even two such queues---is nontrivial. The fusion algorithm in \cite{demaine2015polylogarithmic} relies on several specialized algorithms and data structures. In particular, \emph{weight-balanced B-trees} are used to represent $\Qnow$ in each partially retroactive priority queue. $Q_{\text{del}}$, which is used to keep track of deleted elements, is similarly stored as a weight-balanced B-tree. These trees, which can be thought of as a generalization of BB-$\alpha$ trees, were developed by Arge and Vitter \cite{arge2003optimal} and Bender et al. \cite{bender2005cache} in the study of cache-oblivious data structure, but they are useful for finding approximate order statistics as well. Unfortunately, this fusion algorithm is destructive, as copying queue elements in an arbitrary time range may take $O(m)$ time.
+
+\section{Data structures}
+I have implemented several data structures relevant to retroactive priority queues. My implementations rely on metaprogramming and advanced Python constructs such as \texttt{yield from}; they contain type annotations and docstrings in most places. Most functions are recursive and not optimized for speed.
+
+\subsection{Weight-balanced B-tree}
+The \texttt{WBBTree} class \href{https://github.com/6851-2021/retroactive-pq/blob/main/retroactive_pq/wb_btree.py}{(code)} is largely based on \cite{arge2003optimal} and handles deletions lazily rather than implementing the eager deletion procedure described in \cite{bender2005cache}. (Additionally, no special attention is paid to memory layout.) Eager deletion, as well as split and concatenate, are left as future work. A cursory analysis suggests that eager deletion is necessary to compute the approximate order statistics used by the fusion algorithm in \cite{demaine2015polylogarithmic} in $O(1)$ time; this algorithm also uses split and concatenate operations.
+
+
+\subsection{Scapegoat tree}
+The \texttt{RangeTree} class \href{https://github.com/6851-2021/retroactive-pq/blob/main/retroactive_pq/range_scapegoat.py}{(code)} is a generic scapegoat tree with key ranges as internal nodes and keys as leaves.\footnote{Despite the name, this data structure is unrelated to the range trees of Bentley and Saxe \cite{bentley1980decomposable}.} We follow some of the implementation details given in \emph{Open Data Structures} \cite{ods} but allow a custom $\alpha$ parameter. (The $\alpha$ parameter determines how unbalanced the tree can be, so the choice of $\alpha$ represents a tradeoff between update perfrmance and query performance.)   Users of the class must provide their own subtree rebuilding logic (\texttt{rebuild\_fn}) and can provide a metadata class that augments each node. A user-provided metadata class must implement an abstract base class (\texttt{RangeMeta}) that updates node metadata when a key-value pair is inserted into or removed from a node's range. For convenience, we provide a factory (\texttt{make\_agg\_meta}) that generates range tree classes with simple aggregations built in. For instance, the \texttt{SumRangeTree} class stores subtree sums as metadata.
+
+\subsection{Tree augmentations}
+We use \texttt{RangeTree} to implement a variety of augmented search trees. The \texttt{PrefixSumTree} class \href{https://github.com/6851-2021/retroactive-pq/blob/main/retroactive_pq/prefix_sum_tree.py}{(code)} supports the prefix sum queries necessary for partially retroactive search trees via the \texttt{first\_node\_with\_sum} and \texttt{last\_node\_with\_sum} methods. Likewise, \texttt{InsertTree} \href{https://github.com/6851-2021/retroactive-pq/blob/main/retroactive_pq/insert_tree.py}{(code)} supports queries of type ``minimum element in $\Qnow$'' and ``maximum element not in $\Qnow$.'' Finally, a basic fully retroactive priority queue \href{https://github.com/6851-2021/retroactive-pq/blob/main/retroactive_pq/full_pq.py}{(code)} stores partially retroactive priority queues in its metadata objects.
+
+\subsection{Partially retroactive priority queue}
+The \texttt{PRPriorityQueue} class \href{https://github.com/6851-2021/retroactive-pq/blob/main/retroactive_pq/partial_pq.py}{(code)} is a thin wrapper around a collection of weight-balanced B-trees and augmented scapegoat trees, as described above. We implement the bridge-based update operations given in \cite{demaine2007retroactive}.
+
+\subsection{Fully retroactive priority queue}
+The \texttt{PriorityQueue} class \href{https://github.com/6851-2021/retroactive-pq/blob/main/retroactive_pq/full_pq.py}{(code)} does not fully implement the fusion algorithm given in \cite{demaine2015polylogarithmic}, but it does store partially retroactive priority queues in a main tree (an augmented scapegoat tree). We implement an inefficient copy-based fusion function based on the set-theoretic definitions in \cite{demaine2015polylogarithmic}.
+
+\section{Tests}
+The invariants of weight-balanced B-trees and scapegoat trees are rather complicated. We employ invariant-based testing: the \texttt{WBBTree} and \texttt{RangeTree} classes both provide \texttt{check\_invariants} methods which are used in automated tests over dozens of access sequences. Most access sequences are random, but we include several pathological cases (ascending and descending sequences, plus the bit reversal sequence). The invariant tests as written \href{https://github.com/6851-2021/retroactive-pq/blob/main/tests/test_tree_invariants.py}{(code)} take several minutes to run---there are approximately 750 tests between the two classes---but this performance could be improved by tweaking parameters. The \texttt{PrefixSumTree} class is tested similarly \href{https://github.com/6851-2021/retroactive-pq/blob/main/tests/test_prefix_sum.py}{(code)} and a few manually written tests are included for the \texttt{PRPriorityQueue} class \href{https://github.com/6851-2021/retroactive-pq/blob/main/tests/test_partial_pq.py}{(code)}.
+
+\section{Usage}
+Most data structures contain thorough inline documentation. We include a usage demo of \texttt{PRPriorityQueue} below.
+
+\begin{minted}{python}
+>>> from retroactive_pq.partial_pq import PRPriorityQueue
+>>> q = PRPriorityQueue()
+>>> q.insert(1)
+>>> q.insert(2)
+>>> q
+Qnow: 1 2
+events:
+1.0: insert 1
+2.0: insert 2
+
+>>> q.insert(3, t=2.5)
+>>> q.delete_min(t=2.25)
+>>> q
+Qnow: 2 3
+events:
+1.0: insert 1
+2.0: insert 2
+2.25: delete min
+2.5: insert 3
+
+>>> q.delete_op(2.25)
+>>> q
+Qnow: 1 2 3
+events:
+1.0: insert 1
+2.0: insert 2
+2.5: insert 3
+\end{minted}
+
+\section{Challenges and future work}
+This work could be expanded and improved in a number of ways, including:
+\begin{itemize}
+    \item \textbf{Implementation of related partially retroactive data structures.} Implementing partially retroactive deques, as described in \cite{demaine2007retroactive}, would require no new augmented data structures.
+    \item \textbf{Optimal implementation of fully retroactive priority queues.} This would require modifications to the weight-balanced B-tree algorithm, as described. It would also require an implementation of the linear-time order statistics algorithm given in \cite{rauh2010fast}. Though time constraints prevented me from pursuing these modifications, all basic data structures are in place.
+    \item \textbf{Performance improvements.} \href{https://github.com/6851-2021/retroactive-priority-queue}{Another 6.851 project} implements partially retroactive priority queues using treaps. Though I have not performed careful benchmarks, this implementation is likely more performant, as it uses fewer layers of indirection than mine---my design is oriented around the specific data structures mentioned in \cite{demaine2015polylogarithmic}.
+    \item \textbf{Generalization.} This project could be used as a basis for a collection of integrated retroactive data structures, similar to Chelsea Voss' \href{https://github.com/csvoss/retroactive}{6.851 final project}.
+\end{itemize}
+
+
+\newpage
+\printbibliography
+
+% TODO: references
+
+\end{document}
