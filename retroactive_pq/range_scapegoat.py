@@ -432,14 +432,16 @@ def make_agg_meta(insert_fn: AggType, remove_fn: AggType):
     (i.e. commutative, etc.) aggregation (e.g. +, *)."""
     class AggMeta(RangeMeta):
         """Metadata class for an aggregation."""
-        def __init__(self, key: K, val: V, *args, **kwargs):
-            super().__init__(key, val, *args, **kwargs)
+        def __init__(self, key: K, val: V, node: NodeType, *args, **kwargs):
+            super().__init__(key, val, node, *args, **kwargs)
             self.val = val
 
-        def insert(self, key: K, val: V, *args, **kwargs) -> None:
+        def insert(self, key: K, val: V, node: NodeType,
+                   *args, **kwargs) -> None:
             self.val = insert_fn(self.val, val)
 
-        def remove(self, key: K, val: V, *args, **kwargs) -> None:
+        def remove(self, key: K, val: V, node: NodeType,
+                   *args, **kwargs) -> None:
             self.val = remove_fn(self.val, val)
 
         def __repr__(self):
@@ -459,8 +461,8 @@ def make_agg_meta(insert_fn: AggType, remove_fn: AggType):
                 parent.max = right.max
                 parent.ub = parent.left.ub + parent.right.ub
                 parent.size = parent.left.size + parent.right.size
-                parent.meta = AggMeta(left.min, left.meta.val)
-                parent.meta.insert(right.max, right.meta.val)
+                parent.meta = AggMeta(left.min, left.meta.val, parent)
+                parent.meta.insert(right.max, right.meta.val, parent)
                 next_level.append(parent)
             else:
                 next_level.append(left)

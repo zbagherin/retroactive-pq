@@ -10,9 +10,13 @@ Inspired by, but not distinctly not an implementation of:
 """
 from typing import TypeVar, Optional, List
 from collections import deque
-from range_scapegoat import RangeTree, RangeNode, RangeMeta, NodeType
-from partial_pq import (PRPriorityQueue, EventType, INSERT, DELETE_MIN, TS,
-                        TS_ZERO, TS_EPSILON)
+from retroactive_pq.range_scapegoat import (
+    RangeTree, RangeNode, RangeMeta, NodeType
+)
+from retroactive_pq.partial_pq import (
+    PRPriorityQueue, EventType, INSERT, DELETE_MIN, TS,
+    TS_ZERO, TS_EPSILON
+)
 
 V = TypeVar('V')
 

@@ -9,10 +9,10 @@ Based on:
     Article 13. (URL: https://erikdemaine.org/papers/Retroactive_TALG/)
 """
 from typing import TypeVar, Generic, Union, Tuple, Optional, Generator
-from range_scapegoat import SumRangeTree
-from wb_btree import WBBTree
-from insert_tree import InsertTree
-from prefix_sum_tree import PrefixSumTree
+from retroactive_pq.range_scapegoat import SumRangeTree
+from retroactive_pq.wb_btree import WBBTree
+from retroactive_pq.insert_tree import InsertTree
+from retroactive_pq.prefix_sum_tree import PrefixSumTree
 
 TS = float
 TS_ZERO = 0.0

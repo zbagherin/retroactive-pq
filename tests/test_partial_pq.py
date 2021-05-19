@@ -1,6 +1,5 @@
 """Basic tests for the partially retroactive priority queue."""
-from partial_pq import PRPriorityQueue
-
+from retroactive_pq.partial_pq import PRPriorityQueue
 
 def test_partial_pq_insert_only():
     pq = PRPriorityQueue()

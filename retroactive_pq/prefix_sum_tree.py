@@ -1,6 +1,9 @@
+"""A dynamic scapegat tree augmented with prefix sums."""
 from typing import Generic, TypeVar, Optional, Tuple, Any
-from range_scapegoat import RangeTree, RangeNode, RangeMeta, NodeType
 from collections import deque
+from retroactive_pq.range_scapegoat import (
+    RangeTree, RangeNode, RangeMeta, NodeType
+)
 
 K = TypeVar('K')
 V = TypeVar('V')

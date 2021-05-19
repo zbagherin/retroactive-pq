@@ -5,7 +5,7 @@ We particularly emphasize our use case: sequences with elements {-1, 0, 1}.
 import pytest
 from random import Random
 from collections import deque
-from prefix_sum_tree import PrefixSumTree
+from retroactive_pq.prefix_sum_tree import PrefixSumTree
 
 
 def cumsum(x):

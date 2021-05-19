@@ -4,7 +4,9 @@ Used to maintain insertions masked by Qnow in a partially retroactive priority
 queue.
 """
 from typing import Generic, TypeVar, Optional, Tuple, Any, Callable
-from range_scapegoat import RangeTree, RangeNode, RangeMeta, NodeType
+from retroactive_pq.range_scapegoat import (
+    RangeTree, RangeNode, RangeMeta, NodeType
+)
 from collections import deque
 from functools import partial
 

@@ -1,8 +1,8 @@
 """Invariant tests for scapegoat range trees and weight-balanced B-trees."""
 import pytest
 from random import Random
-from wb_btree import WBBTree
-from range_scapegoat import SumRangeTree
+from retroactive_pq.wb_btree import WBBTree
+from retroactive_pq.range_scapegoat import SumRangeTree
 from math import log2
 
 
