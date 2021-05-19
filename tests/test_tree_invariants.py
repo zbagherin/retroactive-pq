@@ -91,7 +91,7 @@ range_tree_insert_and_delete_sequences = {
         make_sequences('shortest', 50, 20).items(),
         make_sequences('shortest', 50, 20, seed_offset=20).items())
 }
-alpha_vals = [0.51, 0.67, 0.99]
+alpha_vals = [0.51, 0.67, 0.95]
 
 
 # Strict tests check invariants at every step.

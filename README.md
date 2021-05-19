@@ -1,5 +1,7 @@
 # Retroactive Priority Queues
 
+6.851 spring 2021 final project by Parker J. Rule [(@pjrule)](https://github.com/pjrule)
+
 This repository includes an implementation of [partially retroactive priority queues](https://erikdemaine.org/papers/Retroactive_TALG/), with an experimental implementation of fully retroactive priority queues (using [hierarchical checkpointing](https://erikdemaine.org/papers/FullyRetroactive_WADS2015/)). It is similar in interface [to another 6.851 project](https://github.com/6851-2021/retroactive-priority-queue) but is internally different. 
 
 ## Data structures
