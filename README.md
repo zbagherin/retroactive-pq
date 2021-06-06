@@ -1,6 +1,6 @@
 # Retroactive Priority Queues
 
-6.851 spring 2021 final project by Parker J. Rule [(@pjrule)](https://github.com/pjrule)
+6.851 Spring 2021 final project by Parker J. Rule [(@pjrule)](https://github.com/pjrule)
 
 This repository includes an implementation of [partially retroactive priority queues](https://erikdemaine.org/papers/Retroactive_TALG/), with an experimental implementation of fully retroactive priority queues (using [hierarchical checkpointing](https://erikdemaine.org/papers/FullyRetroactive_WADS2015/)). It is similar in interface [to another 6.851 project](https://github.com/6851-2021/retroactive-priority-queue) but is internally different. 
 
@@ -43,4 +43,4 @@ events:
 We use `pytest` for testing. The tests for the weight-balanced B-tree, scapegoat tree, and prefix sum tree implementations are automatically generated; they check invariants at each step and are therefore computationally expensive (but extremely useful when debugging). To speed the tests up, run the tests with multiple cores [using `pytest-xdist`](https://pypi.org/project/pytest-xdist/).
 
 ## Future work
-See PDF writeup.
+See [PDF writeup](writeup/Retroactive_Priority_Queues_writeup.pdf).
