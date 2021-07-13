@@ -138,3 +138,31 @@ class PriorityQueue:
 
     def __repr__(self):
         return '(root node) ' + str(self.tree.root.meta.queue)
+    
+  >>> from retroactive_pq.partial_pq import PRPriorityQueue
+>>> q = PRPriorityQueue()
+>>> q.insert(1)
+>>> q.insert(2)
+>>> q
+Qnow: 1 2
+events:
+1.0: insert 1
+2.0: insert 2
+
+>>> q.insert(3, t=2.5)
+>>> q.delete_min(t=2.25)
+>>> q
+Qnow: 2 3
+events:
+1.0: insert 1
+2.0: insert 2
+2.25: delete min
+2.5: insert 3
+
+>>> q.delete_op(2.25)
+>>> q
+Qnow: 1 2 3
+events:
+1.0: insert 1
+2.0: insert 2
+2.5: insert 3
